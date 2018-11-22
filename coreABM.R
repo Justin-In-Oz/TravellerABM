@@ -5,11 +5,17 @@
 #not, what constraints need to be relaxed for them to do so.
 #this project is to learn how to design and implement an ABM 
 #and to explore the solution space for free trader survival
+#https://github.com/Justin-In-Oz/TravellerABM.git
 
 ## Function Set Up
 destList <- function(portLocation, jumpRange) {
   #match planet and return the list of destinations within 
   #jump range
+  # for the time being this will have to be using the Traveller Map API
+  # https://travellermap.com/api/coordinates?sx=sx&sy=sy
+  # https://travellermap.com/api/jumpworlds?sx=sx&sy=sy&hx=hx&hy=hy
+  # these will have to return objects using the httr package
+  
 } return (destinationsList)
 
 cargoList <- function (cargoSource, jumpRange) {
