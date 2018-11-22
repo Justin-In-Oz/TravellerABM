@@ -29,8 +29,15 @@ cargoList <- function (cargoSource, jumpRange) {
 } return (pointToPointCargos)
 
 ## Initialise
+# locations are expressed as (sx, sy) and (hx, hy)
+# captains have a ship, a location and a bank balance
 
 ## Random Activiation
+
+# Jump in System
+
+# find available cargoes for systems within range
+
 
 ## Post turn Admin
 
