@@ -7,6 +7,11 @@
 #and to explore the solution space for free trader survival
 #https://github.com/Justin-In-Oz/TravellerABM.git
 
+## library calls
+library(httr)
+library(jsonlite)
+library(magrittr)
+
 ## Function Set Up
 destList <- function(portLocation, jumpRange) {
   #match planet and return the list of destinations within 
@@ -15,8 +20,14 @@ destList <- function(portLocation, jumpRange) {
   # https://travellermap.com/api/coordinates?sx=sx&sy=sy
   # https://travellermap.com/api/jumpworlds?sx=sx&sy=sy&hx=hx&hy=hy
   # these will have to return objects using the httr package
-  
-} return (destinationsList)
+  rawReturn <- GET(url = "https://travellermap.com/", 
+                          path = "api/jumpworlds", 
+                          query = portLocation)
+  detstinationsList <- rawReturn$content %>%
+    rawToChar() %>%
+    fromJSON() %>%
+    as.data.frame()
+} #return (destinationsList)
 
 cargoList <- function (cargoSource, jumpRange) {
   #Determine the ports of Call
@@ -37,6 +48,14 @@ cargoList <- function (cargoSource, jumpRange) {
 # Jump in System
 
 # find available cargoes for systems within range
+#pass location as Regina
+currentLocation <- list(sx=-4, sy=-1, hx=19, hy=10)
+
+#set the jump range to be that of a freetrader
+jumpRange <- 1
+
+# call the destList function to find out what is available
+jumpDestinations <- destList(currentLocation, jumpRange)
 
 
 ## Post turn Admin
