@@ -20,9 +20,15 @@ destList <- function(portLocation, jumpRange) {
   # https://travellermap.com/api/coordinates?sx=sx&sy=sy
   # https://travellermap.com/api/jumpworlds?sx=sx&sy=sy&hx=hx&hy=hy
   # these will have to return objects using the httr package
+  # create the query to send
+  #start with the location
+  jumpQuery <- portLocation
+  #add the jump range
+  jumpQuery[["jump"]] <-jumpRange
+  
   rawReturn <- GET(url = "https://travellermap.com/", 
                           path = "api/jumpworlds", 
-                          query = portLocation)
+                          query = jumpQuery)
   detstinationsList <- rawReturn$content %>%
     rawToChar() %>%
     fromJSON() %>%
