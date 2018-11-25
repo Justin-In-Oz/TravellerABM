@@ -13,7 +13,7 @@ library(jsonlite)
 library(magrittr)
 
 ## Function Set Up
-destList <- function(portLocation, jumpRange) {
+destList <- function(portLocation, shipRange) {
   #match planet and return the list of destinations within 
   #jump range
   # for the time being this will have to be using the Traveller Map API
@@ -24,24 +24,40 @@ destList <- function(portLocation, jumpRange) {
   #start with the location
   jumpQuery <- portLocation
   #add the jump range
-  jumpQuery[["jump"]] <-jumpRange
+  jumpQuery[["jump"]] <-shipRange
   
   rawReturn <- GET(url = "https://travellermap.com/", 
                           path = "api/jumpworlds", 
                           query = jumpQuery)
-  detstinationsList <- rawReturn$content %>%
+  destinationsList <- rawReturn$content %>%
     rawToChar() %>%
     fromJSON() %>%
     as.data.frame()
-} #return (destinationsList)
+  return (destinationsList)
+} # end of destList function
 
-cargoList <- function (cargoSource, jumpRange) {
-  #Determine the ports of Call
-  portsOfCall <- destList(cargoSource, jumpRange)
-  
-  
+cargoList <- function (cargoSource, shipRange) {
   # lookup the UPPs for the two points and generate the 
   # lots and tonnage going between the two ports
+  # Determine the ports of Call
+  portsOfCall <- destList(portLocation = cargoSource, shipRange = jumpRange)
+  # extract the pop numbers from the UPP string
+  # Population is the fifth with the starport being the first
+  # assign the exteracted numbers to a new vector in the df
+  portsOfCall$Worlds.PopNum <- vapply(X = portsOfCall$Worlds.UWP, 
+                                      FUN = substr, 
+                                      start = 5, 
+                                      stop = 5,
+                                      FUN.VALUE = character(1))
+  #convert the characters into integers, this might not work for hex pop numbers over 10
+  portsOfCall$Worlds.PopNum <- vapply(X = portsOfCall$Worlds.PopNum,
+                                      FUN = as.integer,
+                                      FUN.VALUE = integer(1))
+  # create an empty numeric verctor of that length
+  
+  # lapply a 1d6*5 random number generator across the vector
+  
+
   
 } return (pointToPointCargos)
 
@@ -61,7 +77,8 @@ currentLocation <- list(sx=-4, sy=-1, hx=19, hy=10)
 jumpRange <- 1
 
 # call the destList function to find out what is available
-jumpDestinations <- destList(currentLocation, jumpRange)
+jumpDestinations <- destList(portLocation = currentLocation, 
+                             shipRange = jumpRange)
 
 
 ## Post turn Admin
