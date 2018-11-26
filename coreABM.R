@@ -53,13 +53,21 @@ cargoList <- function (cargoSource, shipRange) {
   portsOfCall$Worlds.PopNum <- vapply(X = portsOfCall$Worlds.PopNum,
                                       FUN = as.integer,
                                       FUN.VALUE = integer(1))
-  # create an empty numeric verctor of that length
+  
+  # create an empty numeric vector of that length
+  pointToPointCargos <- vector(mode = "list", length = nrow(portsOfCall))
   
   # lapply a 1d6*5 random number generator across the vector
+  pointToPointCargos <- lapply(X = portsOfCall$Worlds.PopNum, 
+                               FUN = function(popN) {sample.int(
+                               n = 6, replace = TRUE,
+                               size = portsOfCall$Worlds.PopNum)* 5})
   
+  # name the cargo destinations in the list
+  names(pointToPointCargos) <- portsOfCall$Worlds.Name
 
-  
-} return (pointToPointCargos)
+  return (pointToPointCargos)
+} 
 
 ## Initialise
 # locations are expressed as (sx, sy) and (hx, hy)
@@ -77,7 +85,7 @@ currentLocation <- list(sx=-4, sy=-1, hx=19, hy=10)
 jumpRange <- 1
 
 # call the destList function to find out what is available
-jumpDestinations <- destList(portLocation = currentLocation, 
+availableCrgos <- cargoList(cargoSource = currentLocation, 
                              shipRange = jumpRange)
 
 
