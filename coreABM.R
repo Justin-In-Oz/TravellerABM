@@ -61,13 +61,27 @@ cargoList <- function (cargoSource, shipRange) {
   pointToPointCargos <- lapply(X = portsOfCall$Worlds.PopNum, 
                                FUN = function(popN) {sample.int(
                                n = 6, replace = TRUE,
-                               size = portsOfCall$Worlds.PopNum)* 5})
+                               size = popN)* 5})
   
   # name the cargo destinations in the list
   names(pointToPointCargos) <- portsOfCall$Worlds.Name
 
   return (pointToPointCargos)
-} 
+} # end of the cargo list function
+
+availPassengers <- function (startPop, endPop) {
+  # declare the vectors for the number of dice
+  diceHighPlus     <- c(0,1,3,3,3,3,3,2,2,2,2,2)
+  diceHighMinus    <- c(0,1,2,3,2,2,2,1,1,1,0,0)
+  diceMiddlePlus   <- c(0,1,2,3,3,3,3,3,2,2,2,2)
+  diceMiddleMinus  <- c(0,1,2,3,2,2,2,2,1,1,1,0)
+  diceLowPlus      <- c(0,3,3,4,4,3,3,4,4,4,5,6)
+  diceLowMinus     <- c(0,1,1,1,1,0,0,0,0,0,0,0)
+  
+  # create the empty named list
+  availPassengers <- list("High"= 0, "Middle" = 0, "Low" = 0)
+  
+}
 
 ## Initialise
 # locations are expressed as (sx, sy) and (hx, hy)
@@ -77,16 +91,31 @@ cargoList <- function (cargoSource, shipRange) {
 
 # Jump in System
 
-# find available cargoes for systems within range
+# find available cargoes for systems within range, this is a fubction call
+# that returns a list of destinations and cargoes available
+
+# test data
 #pass location as Regina
 currentLocation <- list(sx=-4, sy=-1, hx=19, hy=10)
-
 #set the jump range to be that of a freetrader
-jumpRange <- 1
+jumpRange <- 2
 
 # call the destList function to find out what is available
 availableCrgos <- cargoList(cargoSource = currentLocation, 
                              shipRange = jumpRange)
+
+# cargo selection is a load packing problem.
+# this can be done via linear program, various heuritics
+# or random brute force.
+
+# after cargo selection, post destination and seek passengers
+
+# test data for passenger call
+# set to population of the source world
+sourcePop <- 6
+# set the population of the destination world
+destPop <- 8
+
 
 
 ## Post turn Admin
