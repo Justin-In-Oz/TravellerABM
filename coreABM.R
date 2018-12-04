@@ -69,6 +69,8 @@ cargoList <- function (cargoSource, shipRange) {
   return (pointToPointCargos)
 } # end of the cargo list function
 
+# roll numbers of d6 based upon the populatin of the source 
+# and modify the result based upon the pop of the destination
 availPassengers <- function (startPop, endPop) {
   # declare the vectors for the number of dice
   diceHighPlus     <- c(0,1,3,3,3,3,3,2,2,2,2,2)
@@ -77,11 +79,42 @@ availPassengers <- function (startPop, endPop) {
   diceMiddleMinus  <- c(0,1,2,3,2,2,2,2,1,1,1,0)
   diceLowPlus      <- c(0,3,3,4,4,3,3,4,4,4,5,6)
   diceLowMinus     <- c(0,1,1,1,1,0,0,0,0,0,0,0)
+  modifierHigh   <- 0
+  modifierMiddle <- 0
+  modifierLow     <- 0
   
   # create the empty named list
   availPassengers <- list("High"= 0, "Middle" = 0, "Low" = 0)
-  
+  #generate the number of high passage demand to the destination
+  highPassengers <- max(0,  sum(sample(x = 1:6, 
+                                        diceHighPlus[startPop,], 
+                                        replace = TRUE))
+                           - sum(sample(x = 1:6, 
+                                        diceHighMinus[startPop,], 
+                                        replace = TRUE))
+                           + modifierHigh
+                        )
+
+  # generate the middle passangers
+  middlePassengers <- max(0,  sum(sample(x = 1:6, 
+                                       diceMiddlePlus[startPop,], 
+                                       replace = TRUE))
+                        - sum(sample(x = 1:6, 
+                                     diceMiddleMinus[startPop,], 
+                                     replace = TRUE))
+                        + modifierMiddle
+  )    
 }
+
+#Generate the number of low passangers
+lowPassengers <- max(0,  sum(sample(x = 1:6, 
+                                     diceLowPlus[startPop,], 
+                                     replace = TRUE))
+                      - sum(sample(x = 1:6, 
+                                   diceLowMinus[startPop,], 
+                                   replace = TRUE))
+                      + modifierLow
+)
 
 ## Initialise
 # locations are expressed as (sx, sy) and (hx, hy)
