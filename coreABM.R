@@ -71,6 +71,8 @@ cargoList <- function (cargoSource, shipRange) {
 
 # roll numbers of d6 based upon the populatin of the source 
 # and modify the result based upon the pop of the destination
+# The values of the number of dice and the modifiers are 
+# taken from Traveller LBB vol 2 page 7 pub by GDW 1977 
 availPassengers <- function (startPop, endPop) {
   # declare the vectors for the number of dice
   diceHighPlus     <- c(0,1,3,3,3,3,3,2,2,2,2,2)
@@ -79,42 +81,50 @@ availPassengers <- function (startPop, endPop) {
   diceMiddleMinus  <- c(0,1,2,3,2,2,2,2,1,1,1,0)
   diceLowPlus      <- c(0,3,3,4,4,3,3,4,4,4,5,6)
   diceLowMinus     <- c(0,1,1,1,1,0,0,0,0,0,0,0)
-  modifierHigh   <- 0
-  modifierMiddle <- 0
-  modifierLow     <- 0
+ # declare the voectors for the modifiers for the passengers 
+ # based upon the destriantion pop number
+  modifierHigh    <- c(0,-1,-1,-1,0,0,0,1,1,1,0,0)
+  modifierMiddle  <- c(0,-2,-1,-1,-1,0,0,0,1,1,1,0)
+  modifierLow     <- c(0,-4,-3,-2,-1,-1,0,0,0,2,4,0)
   
   # create the empty named list
   availPassengers <- list("High"= 0, "Middle" = 0, "Low" = 0)
-  #generate the number of high passage demand to the destination
+# generate the number of high passage demand to the destination
+# one set of rolls minus the other but with a zero as a floor 
+# by calling the max between the sum and zero. This stops a -ve result
   highPassengers <- max(0,  sum(sample(x = 1:6, 
-                                        diceHighPlus[startPop,], 
+                                       size = diceHighPlus[startPop], 
                                         replace = TRUE))
                            - sum(sample(x = 1:6, 
-                                        diceHighMinus[startPop,], 
+                                        size = diceHighMinus[startPop], 
                                         replace = TRUE))
-                           + modifierHigh
+                           + modifierHigh[endPop]
                         )
 
   # generate the middle passangers
   middlePassengers <- max(0,  sum(sample(x = 1:6, 
-                                       diceMiddlePlus[startPop,], 
+                                         size = diceMiddlePlus[startPop,], 
                                        replace = TRUE))
-                        - sum(sample(x = 1:6, 
-                                     diceMiddleMinus[startPop,], 
+                              - sum(sample(x = 1:6, 
+                                     size = diceMiddleMinus[startPop,], 
                                      replace = TRUE))
-                        + modifierMiddle
-  )    
-}
+                              + modifierMiddle[endPop,]
+                          )    
+  
 
 #Generate the number of low passangers
 lowPassengers <- max(0,  sum(sample(x = 1:6, 
-                                     diceLowPlus[startPop,], 
-                                     replace = TRUE))
-                      - sum(sample(x = 1:6, 
-                                   diceLowMinus[startPop,], 
-                                   replace = TRUE))
-                      + modifierLow
-)
+                                    size = diceLowPlus[startPop,], 
+                                    replace = TRUE))
+                        - sum(sample(x = 1:6, 
+                                    size = diceLowMinus[startPop,], 
+                                    replace = TRUE))
+                        + modifierLow[endPop,]
+                      )
+availPassengers <- list("High"   = highPassengers, 
+                        "Middle" = middlePassengers, 
+                        "Low"    = lowPassengers)
+} # end available passangers function
 
 ## Initialise
 # locations are expressed as (sx, sy) and (hx, hy)
@@ -149,7 +159,7 @@ sourcePop <- 6
 # set the population of the destination world
 destPop <- 8
 
-
-
+testPassengers1 <- availPassengers(sourcePop,destPop)
+testPassengers1
 ## Post turn Admin
 
