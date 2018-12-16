@@ -2,7 +2,7 @@
 #Traveller game that came out in the late seventies. This will
 #use agent based modelling to explore the survival of captains 
 #and their ships from bankruptcy. Can free traders survive? If
-#not, what constraints need to be relaxed for them to do so.
+#not, what constraints need to be relaxed for them to do so?
 #this project is to learn how to design and implement an ABM 
 #and to explore the solution space for free trader survival
 #https://github.com/Justin-In-Oz/TravellerABM.git
@@ -49,7 +49,7 @@ cargoList <- function (cargoSource, shipRange) {
                                       start = 5, 
                                       stop = 5,
                                       FUN.VALUE = character(1))
-  #convert the characters into integers, this might not work for hex pop numbers over 10
+  #convert the characters into integers, this might not work for hex pop numbers over 9
   portsOfCall$Worlds.PopNum <- vapply(X = portsOfCall$Worlds.PopNum,
                                       FUN = as.integer,
                                       FUN.VALUE = integer(1))
@@ -57,6 +57,9 @@ cargoList <- function (cargoSource, shipRange) {
   # create an empty numeric vector of that length
   pointToPointCargos <- vector(mode = "list", length = nrow(portsOfCall))
   
+  # originally I had done the below code with a for loop. I asked the question on stack overflow
+  # https://stackoverflow.com/questions/53475367/eliminate-for-loop-through-functional-programming
+  # I was happy with the answers. 
   # lapply a 1d6*5 random number generator across the vector
   pointToPointCargos <- lapply(X = portsOfCall$Worlds.PopNum, 
                                FUN = function(popN) {sample.int(
@@ -103,23 +106,22 @@ availPassengers <- function (startPop, endPop) {
 
   # generate the middle passangers
   middlePassengers <- max(0,  sum(sample(x = 1:6, 
-                                         size = diceMiddlePlus[startPop,], 
+                                         size = diceMiddlePlus[startPop], 
                                        replace = TRUE))
                               - sum(sample(x = 1:6, 
-                                     size = diceMiddleMinus[startPop,], 
+                                     size = diceMiddleMinus[startPop], 
                                      replace = TRUE))
-                              + modifierMiddle[endPop,]
+                              + modifierMiddle[endPop]
                           )    
-  
 
 #Generate the number of low passangers
 lowPassengers <- max(0,  sum(sample(x = 1:6, 
-                                    size = diceLowPlus[startPop,], 
+                                    size = diceLowPlus[startPop], 
                                     replace = TRUE))
                         - sum(sample(x = 1:6, 
-                                    size = diceLowMinus[startPop,], 
+                                    size = diceLowMinus[startPop], 
                                     replace = TRUE))
-                        + modifierLow[endPop,]
+                        + modifierLow[endPop]
                       )
 availPassengers <- list("High"   = highPassengers, 
                         "Middle" = middlePassengers, 
@@ -134,7 +136,10 @@ availPassengers <- list("High"   = highPassengers,
 
 # Jump in System
 
-# find available cargoes for systems within range, this is a fubction call
+# * get paid for cargo delivery
+# * refuel
+
+# find available cargoes for systems within range, this is a function call
 # that returns a list of destinations and cargoes available
 
 # test data
@@ -148,7 +153,7 @@ availableCrgos <- cargoList(cargoSource = currentLocation,
                              shipRange = jumpRange)
 
 # cargo selection is a load packing problem.
-# this can be done via linear program, various heuritics
+# this can be done via linear program, various heuristics
 # or random brute force.
 
 # after cargo selection, post destination and seek passengers
@@ -161,5 +166,30 @@ destPop <- 8
 
 testPassengers1 <- availPassengers(sourcePop,destPop)
 testPassengers1
-## Post turn Admin
 
+# passenger selection is easier than cargo packing. Fill up 
+# on the High Passages untill they run out or you are at 
+# capacity, then switch to middle and do the same. FIll up 
+# on Low until your cryo bins are full or there are no more to take. 
+
+# then jump and advance your clock 1 week cannoncally, but 
+#to simplify the model the time step will be advanced by 2 
+#weeks at this point. This will abstract all of the time in 
+#port to be 1 week additional. Rinse, repeat.
+
+# calculate the accountancy for the ship at this point too. Even 
+# though the expenses would occur at different timings, the whole 
+# lot can be abstracted to the one moment per trip.
+
+# costs come from fuel, life support, maintenance, salaries, 
+# mortgage, berthing
+# fuel <- 15000
+# lifeSupport <- 20000
+# maintenance <- 1426
+# salaries <- 4500
+# berthing <- 100
+# morthgage <- 77250
+
+## Post turn Admin
+# if a ship has had a -ve bank balance for 5 (?) turns on the 
+# trot, the skip jumpers catch up and repo the ship. Game over.
