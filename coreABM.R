@@ -7,21 +7,22 @@
 #and to explore the solution space for free trader survival
 #https://github.com/Justin-In-Oz/TravellerABM.git
 
-## library calls
-library(httr)
-library(jsonlite)
-library(magrittr)
+## library calls and why
+library(httr) # nake API calls to Traveller Map
+library(jsonlite) # parse the returns of the API calls
+library(magrittr) # pipe stuff
+library(adagio) # knapsack
 
 ## Function Set Up
 destList <- function(portLocation, shipRange) {
-  #match planet and return the list of destinations within 
-  #jump range
+  # match planet and return the list of destinations within 
+  # jump range
   # for the time being this will have to be using the Traveller Map API
   # https://travellermap.com/api/coordinates?sx=sx&sy=sy
   # https://travellermap.com/api/jumpworlds?sx=sx&sy=sy&hx=hx&hy=hy
   # these will have to return objects using the httr package
   # create the query to send
-  #start with the location
+  # start with the location
   jumpQuery <- portLocation
   #add the jump range
   jumpQuery[["jump"]] <-shipRange
@@ -33,7 +34,8 @@ destList <- function(portLocation, shipRange) {
     rawToChar() %>%
     fromJSON() %>%
     as.data.frame()
-  return (destinationsList)
+  return (destinationsList) # need to figure out how to exlude the 
+  # current location from the result list
 } # end of destList function
 
 cargoList <- function (cargoSource, shipRange) {
@@ -136,10 +138,7 @@ availPassengers <- list("High"   = highPassengers,
 
 # Jump in System
 
-# * get paid for cargo delivery
-# * refuel
-
-# find available cargoes for systems within range, this is a function call
+# ** Find available cargoes for systems within range, this is a function call
 # that returns a list of destinations and cargoes available
 
 # test data
@@ -149,14 +148,16 @@ currentLocation <- list(sx=-4, sy=-1, hx=19, hy=10)
 jumpRange <- 2
 
 # call the destList function to find out what is available
-availableCrgos <- cargoList(cargoSource = currentLocation, 
+availableCargos <- cargoList(cargoSource = currentLocation, 
                              shipRange = jumpRange)
 
 # cargo selection is a load packing problem.
 # this can be done via linear program, various heuristics
-# or random brute force.
-
-# after cargo selection, post destination and seek passengers
+# or random brute force. 
+# the load packing problem is called the knapsack problem
+# lapply the knapsack function to the cargo list and look for the 
+# one which maxes the return
+# after cargo selection, post destination and ** seek passengers
 
 # test data for passenger call
 # set to population of the source world
@@ -172,7 +173,7 @@ testPassengers1
 # capacity, then switch to middle and do the same. FIll up 
 # on Low until your cryo bins are full or there are no more to take. 
 
-# then jump and advance your clock 1 week cannoncally, but 
+# ** then jump and advance your clock 1 week cannoncally, but 
 #to simplify the model the time step will be advanced by 2 
 #weeks at this point. This will abstract all of the time in 
 #port to be 1 week additional. Rinse, repeat.
@@ -182,13 +183,14 @@ testPassengers1
 # lot can be abstracted to the one moment per trip.
 
 # costs come from fuel, life support, maintenance, salaries, 
-# mortgage, berthing
-# fuel <- 15000
-# lifeSupport <- 20000
-# maintenance <- 1426
-# salaries <- 4500
-# berthing <- 100
-# morthgage <- 77250
+# mortgage, berthing. They are all put to the per trip unit
+fuel <- 15000 # 500 per dTon by 30 dTons
+lifeSupport <- 20000 # 10 staterooms
+maintenance <- 1426 # cashPrice/1000/26
+salaries <- 4500 # assumes pilot owner
+berthing <- 100 # chump change
+mortgage <- 77250 # cashPrice/480/2
+perTripCosts <- fuel + lifeSupport + salaries + berthing + mortgage
 
 ## Post turn Admin
 # if a ship has had a -ve bank balance for 5 (?) turns on the 
