@@ -34,8 +34,11 @@ destList <- function(portLocation, shipRange) {
     rawToChar() %>%
     fromJSON() %>%
     as.data.frame()
-  return (destinationsList) # need to figure out how to exlude the 
-  # current location from the result list
+  # create the value for the current hex
+  currentHex = paste(portLocation$hx, portLocation$hy, sep = "")
+  # remove the destination that is the current hex
+  destinationsList <- destinationsList[!(destinationsList$Worlds.Hex == currentHex), ]
+  return (destinationsList) 
 } # end of destList function
 
 cargoList <- function (cargoSource, shipRange) {
@@ -145,7 +148,7 @@ availPassengers <- list("High"   = highPassengers,
 #pass location as Regina
 currentLocation <- list(sx=-4, sy=-1, hx=19, hy=10)
 #set the jump range to be that of a freetrader
-jumpRange <- 2
+jumpRange <- 1
 
 # call the destList function to find out what is available
 availableCargos <- cargoList(cargoSource = currentLocation, 
@@ -159,18 +162,38 @@ availableCargos <- cargoList(cargoSource = currentLocation,
 # one which maxes the return
 
 #test Data
-shipCargoCapacity <- 82
+shipCargoCapacity <- 82 # this is the cargo cap of a class A Freetrader
 
+# create the list of the results of the knpasack problem for the available cargos
 cargoRevenues <- lapply(X = names(availableCargos), 
                         FUN = function(nm) {
-                        knapsack(w = availableCargos[[nm]],
-                                 p = availableCargos[[nm]],
+                        knapsack(w = unlist(availableCargos[nm]),
+                                 p = 1000 * unlist(availableCargos[nm]),
                                  cap = shipCargoCapacity)
                           })
+# choose a destination based upon max revenues
+# pick one at random if there are several equal to the max
 
-# after cargo selection, post destination and ** seek passengers
+# extract the revenues available
+revenuesAvailable <- lapply(seq_along(cargoRevenues), 
+                            function(i) cargoRevenues[[i]][["profit"]])
+
+# pull out the max revenue
+maxRevenue <- max(unlist(revenuesAvailable))
+
+# Choose at random one of the destinations that satisfies the max revenue criteria
+# create the list of those which satisfy the max criteria
+destinationChoices <- which(revenuesAvailable == maxRevenue)
+
+# choose one from the list
+jumpDestination <- sample(x = names(availableCargos)[destinationChoices],size = 1)
 
 
+# set to zero the available cargoes that have been choosen
+
+# after cargo selection, post destination and 
+
+# ** seek passengers
 
 # test data for passenger call
 # set to population of the source world
