@@ -8,10 +8,10 @@
 #https://github.com/Justin-In-Oz/TravellerABM.git
 
 ## library calls and why
-library(httr) # nake API calls to Traveller Map
+library(httr) # make API calls to Traveller Map
 library(jsonlite) # parse the returns of the API calls
 library(magrittr) # pipe stuff
-library(adagio) # knapsack
+library(adagio) # knapsack cargo selection and hence destination selection
 
 ## Function Set Up
 destList <- function(portLocation, shipRange) {
@@ -36,7 +36,8 @@ destList <- function(portLocation, shipRange) {
     as.data.frame()
   # create the value for the current hex
   currentHex = paste(portLocation$hx, portLocation$hy, sep = "")
-  # remove the destination that is the current hex
+  # remove the destination that is the current hex using the 
+  # funky [row, column] reference notation from r
   destinationsList <- destinationsList[!(destinationsList$Worlds.Hex == currentHex), ]
   return (destinationsList) 
 } # end of destList function
@@ -141,8 +142,12 @@ availPassengers <- list("High"   = highPassengers,
 
 # Jump in System
   # unload passengers 
+highPassengersOnBoard <- 0
+middlePassengersOnBoard <- 0
   # unload cargo
+cargosInTheHold <- 0
   # revive lowberths
+lowPassengersOnBoard <- 0
 
 # ** Find available cargoes for systems within range, this is a function call
 # that returns a list of destinations and cargoes available
@@ -153,7 +158,6 @@ currentLocation <- list(sx=-4, sy=-1, hx=19, hy=10)
 #set the jump range to be that of a freetrader
 jumpRange <- 1
 
-
 # call the destList function to find out what is available
 availableCargos <- cargoList(cargoSource = currentLocation, 
                              shipRange = jumpRange)
@@ -161,9 +165,9 @@ availableCargos <- cargoList(cargoSource = currentLocation,
 # cargo selection is a load packing problem.
 # this can be done via linear program, various heuristics
 # or random brute force. 
-# the load packing problem is called the knapsack problem
-# lapply the knapsack function to the cargo list and look for the 
-# one which maxes the return
+# The load packing problem is called the knapsack problem
+# lapply the knapsack function to the cargo list and look
+# for the one which maxes the return
 
 #test Data
 shipCargoCapacity <- 82 # this is the cargo cap of a class A Freetrader
@@ -195,10 +199,13 @@ jumpDestination <- sample(x = names(availableCargos)[destinationChoices],size = 
 # set to zero the available cargoes that have been choosen
 #return the index of the destination 
 destinationIndex <- which(names(availableCargos)== jumpDestination)
+
 #return the indices of the knapsack selection
 chosenCargoes <- cargoRevenues[[destinationIndex]][["indices"]]
+
 # set the cargoes in the hold to be those chosen
 cargosInTheHold <- availableCargos[[jumpDestination]][chosenCargoes]
+
 #set the available cargoes selected to zero
 availableCargos[[jumpDestination]][chosenCargoes] <- 0
 
@@ -207,17 +214,52 @@ availableCargos[[jumpDestination]][chosenCargoes] <- 0
 
 # test data for passenger call
 # set to population of the source world
-sourcePop <- 6
+sourcePop <- 8
 # set the population of the destination world
 destPop <- as.numeric(length(unlist(availableCargos[jumpDestination])))
 
-testPassengers1 <- availPassengers(sourcePop,destPop)
-testPassengers1
+portPassengers <- availPassengers(sourcePop,destPop)
+
+# set the test values to be those of a Type A
+passengerStaterooms <- 6
+lowBerthCap <- 20
 
 # passenger selection is easier than cargo packing. Fill up 
 # on the High Passages untill they run out or you are at 
 # capacity, then switch to middle and do the same. FIll up 
 # on Low until your cryo bins are full or there are no more to take. 
+
+# load up the high passages
+if(portPassengers[["High"]] > passengerStaterooms) {
+  highPassengersOnBoard = passengerStaterooms
+  portPassengers[["High"]] <- portPassengers[["High"]] - passengerStaterooms
+} else if (portPassengers[["High"]] <= passengerStaterooms) {
+  highPassengersOnBoard = portPassengers[["High"]]
+  portPassengers[["High"]] <- 0
+}
+
+# load up Middle Passages with remaining capacity
+
+# determine the capacity less the number of High Passengers
+remainingStaterooms <- passengerStaterooms - highPassengersOnBoard
+
+# load up the high passages
+if(portPassengers[["Middle"]] > remainingStaterooms) {
+  middlePassengersOnBoard = remainingStaterooms
+  portPassengers[["Middle"]] <- portPassengers[["Middle"]] - remainingStaterooms
+} else if (portPassengers[["Middle"]] <= remainingStaterooms) {
+  middlePassengersOnBoard = portPassengers[["Middle"]]
+  portPassengers[["Middle"]] <- 0
+}
+# allocate the remaining spaces to Low Passengers
+if(portPassengers[["Low"]] > lowBerthCap) {
+  lowPassengersOnBoard = lowBerthCap
+  portPassengers[["Low"]] <- portPassengers[["Low"]] - lowBerthCap
+} else if (portPassengers["Low"] <= lowBerthCap) {
+  lowPassengersOnBoard = portPassengers[["Low"]]
+  portPassengers[["Low"]] <- 0
+}
+
 
 # ** then jump and advance your clock 1 week cannoncally, but 
 #to simplify the model the time step will be advanced by 2 
@@ -227,6 +269,16 @@ testPassengers1
 # calculate the accountancy for the ship at this point too. Even 
 # though the expenses would occur at different timings, the whole 
 # lot can be abstracted to the one moment per trip.
+commonCarriageRevenue <- sum(cargosInTheHold) * 1000
+highPassageRevenue <- highPassengersOnBoard * 10000
+middlePassengeRevenue <- middlePassengersOnBoard * 8000
+lowPassageRevenue <- lowPassengersOnBoard * 1000
+
+tripRevenue <- commonCarriageRevenue + 
+               highPassageRevenue + 
+               middlePassengeRevenue + 
+               lowPassageRevenue
+
 
 # costs come from fuel, life support, maintenance, salaries, 
 # mortgage, berthing. They are all put to the per trip unit
