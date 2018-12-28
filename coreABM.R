@@ -58,7 +58,7 @@ cargoList <- function (cargoSource, shipRange) {
   portsOfCall$Worlds.PopNum <- vapply(X = portsOfCall$Worlds.PopNum,
                                       FUN = as.integer,
                                       FUN.VALUE = integer(1))
-  
+
   # create an empty numeric vector of that length
   pointToPointCargos <- vector(mode = "list", length = nrow(portsOfCall))
   
@@ -140,6 +140,9 @@ availPassengers <- list("High"   = highPassengers,
 ## Random Activiation
 
 # Jump in System
+  # unload passengers 
+  # unload cargo
+  # revive lowberths
 
 # ** Find available cargoes for systems within range, this is a function call
 # that returns a list of destinations and cargoes available
@@ -149,6 +152,7 @@ availPassengers <- list("High"   = highPassengers,
 currentLocation <- list(sx=-4, sy=-1, hx=19, hy=10)
 #set the jump range to be that of a freetrader
 jumpRange <- 1
+
 
 # call the destList function to find out what is available
 availableCargos <- cargoList(cargoSource = currentLocation, 
@@ -188,18 +192,24 @@ destinationChoices <- which(revenuesAvailable == maxRevenue)
 # choose one from the list
 jumpDestination <- sample(x = names(availableCargos)[destinationChoices],size = 1)
 
-
 # set to zero the available cargoes that have been choosen
+#return the index of the destination 
+destinationIndex <- which(names(availableCargos)== jumpDestination)
+#return the indices of the knapsack selection
+chosenCargoes <- cargoRevenues[[destinationIndex]][["indices"]]
+# set the cargoes in the hold to be those chosen
+cargosInTheHold <- availableCargos[[jumpDestination]][chosenCargoes]
+#set the available cargoes selected to zero
+availableCargos[[jumpDestination]][chosenCargoes] <- 0
 
 # after cargo selection, post destination and 
-
 # ** seek passengers
 
 # test data for passenger call
 # set to population of the source world
 sourcePop <- 6
 # set the population of the destination world
-destPop <- 8
+destPop <- as.numeric(length(unlist(availableCargos[jumpDestination])))
 
 testPassengers1 <- availPassengers(sourcePop,destPop)
 testPassengers1
