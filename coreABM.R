@@ -157,7 +157,20 @@ availableCargos <- cargoList(cargoSource = currentLocation,
 # the load packing problem is called the knapsack problem
 # lapply the knapsack function to the cargo list and look for the 
 # one which maxes the return
+
+#test Data
+shipCargoCapacity <- 82
+
+cargoRevenues <- lapply(X = names(availableCargos), 
+                        FUN = function(nm) {
+                        knapsack(w = availableCargos[[nm]],
+                                 p = availableCargos[[nm]],
+                                 cap = shipCargoCapacity)
+                          })
+
 # after cargo selection, post destination and ** seek passengers
+
+
 
 # test data for passenger call
 # set to population of the source world
