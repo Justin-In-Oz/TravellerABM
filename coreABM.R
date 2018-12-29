@@ -14,6 +14,32 @@ library(magrittr) # pipe stuff
 library(adagio) # knapsack cargo selection and hence destination selection
 
 ## Function Set Up
+currentLocationData <- function(portLocation) {
+  # for the time being this will have to be using the Traveller Map API
+  # https://travellermap.com/api/coordinates?sx=sx&sy=sy
+  # https://travellermap.com/api/jumpworlds?sx=sx&sy=sy&hx=hx&hy=hy
+  # these will have to return objects using the httr package
+  # create the query to send
+  # start with the location
+  jumpQuery <- portLocation
+  # put in a range of 1 as a default
+  jumpQuery[["jump"]] <- 1
+  
+  rawReturn <- GET(url = "https://travellermap.com/", 
+                   path = "api/jumpworlds", 
+                   query = jumpQuery)
+  currentLocationData <- rawReturn$content %>%
+    rawToChar() %>%
+    fromJSON() %>%
+    as.data.frame()
+  # create the value for the current hex
+  currentHex = paste(portLocation$hx, portLocation$hy, sep = "")
+  # remove the destinations that are not the current hex using the 
+  # funky [row, column] reference notation from r
+  currentLocationData <- currentLocationData[(currentLocationData$Worlds.Hex == currentHex), ]
+  return (currentLocationData) 
+} # end of currentLocation function
+
 destList <- function(portLocation, shipRange) {
   # match planet and return the list of destinations within 
   # jump range
@@ -78,11 +104,11 @@ cargoList <- function (cargoSource, shipRange) {
   return (pointToPointCargos)
 } # end of the cargo list function
 
-# roll numbers of d6 based upon the populatin of the source 
-# and modify the result based upon the pop of the destination
-# The values of the number of dice and the modifiers are 
-# taken from Traveller LBB vol 2 page 7 pub by GDW 1977 
 availPassengers <- function (startPop, endPop) {
+  # roll numbers of d6 based upon the populatin of the source 
+  # and modify the result based upon the pop of the destination
+  # The values of the number of dice and the modifiers are 
+  # taken from Traveller LBB vol 2 page 7 pub by GDW 1977 
   # declare the vectors for the number of dice
   diceHighPlus     <- c(0,1,3,3,3,3,3,2,2,2,2,2)
   diceHighMinus    <- c(0,1,2,3,2,2,2,1,1,1,0,0)
@@ -139,6 +165,22 @@ availPassengers <- list("High"   = highPassengers,
 # captains have a ship, a location and a bank balance
 
 ## Random Activiation
+# Set the ship Variables
+jumpRange <- 1 # this is the range of a class A Freetrader
+shipCargoCapacity <- 82 # this is the cargo cap of a class A Freetrader
+passengerStaterooms <- 6 # Freetrader
+lowBerthCap <- 20 # Freetrader
+fuel <- 15000 # 500 per dTon by 30 dTons
+lifeSupport <- 20000 # 10 staterooms
+maintenance <- 1426 # cashPrice/1000/26
+salaries <- 4500 # assumes pilot owner
+berthing <- 100 # chump change
+mortgage <- 77250 # cashPrice/480/2
+perTripCosts <- fuel + lifeSupport + salaries + berthing + mortgage
+bankBlanance <- 150000
+currentLocation <- list(sx=-4, sy=-1, hx=19, hy=10) # Regina
+
+for (j in 1:20 ) {
 
 # Jump in System
   # unload passengers 
@@ -146,17 +188,11 @@ highPassengersOnBoard <- 0
 middlePassengersOnBoard <- 0
   # unload cargo
 cargosInTheHold <- 0
-  # revive lowberths
+  # revive lowberths. Later feature - calculate the survivals
 lowPassengersOnBoard <- 0
 
 # ** Find available cargoes for systems within range, this is a function call
 # that returns a list of destinations and cargoes available
-
-# test data
-#pass location as Regina
-currentLocation <- list(sx=-4, sy=-1, hx=19, hy=10)
-#set the jump range to be that of a freetrader
-jumpRange <- 1
 
 # call the destList function to find out what is available
 availableCargos <- cargoList(cargoSource = currentLocation, 
@@ -168,9 +204,6 @@ availableCargos <- cargoList(cargoSource = currentLocation,
 # The load packing problem is called the knapsack problem
 # lapply the knapsack function to the cargo list and look
 # for the one which maxes the return
-
-#test Data
-shipCargoCapacity <- 82 # this is the cargo cap of a class A Freetrader
 
 # create the list of the results of the knpasack problem for the available cargos
 cargoRevenues <- lapply(X = names(availableCargos), 
@@ -212,17 +245,18 @@ availableCargos[[jumpDestination]][chosenCargoes] <- 0
 # after cargo selection, post destination and 
 # ** seek passengers
 
-# test data for passenger call
 # set to population of the source world
-sourcePop <- 8
+# pull out UWP for Current Location 
+currentUWP <- currentLocationData(portLocation = currentLocation)
+
+# extract the pop of the UWP
+sourcePop <- as.numeric(substr(currentUWP$Worlds.UWP, start = 5, stop = 5))
+
 # set the population of the destination world
 destPop <- as.numeric(length(availableCargos[[jumpDestination]]))
 
+# Call the passengers for the destination
 portPassengers <- availPassengers(sourcePop,destPop)
-
-# set the test values to be those of a Type A
-passengerStaterooms <- 6
-lowBerthCap <- 20
 
 # passenger selection is easier than cargo packing. Fill up 
 # on the High Passages untill they run out or you are at 
@@ -272,23 +306,12 @@ if(portPassengers[["Low"]] > lowBerthCap) {
 commonCarriageRevenue <- sum(cargosInTheHold) * 1000
 highPassageRevenue <- highPassengersOnBoard * 10000
 middlePassengeRevenue <- middlePassengersOnBoard * 8000
-lowPassageRevenue <- lowPassengersOnBoard * 1000
+lowPassageRevenue <- lowPassengersOnBoard * 900
 
 tripRevenue <- commonCarriageRevenue + 
                highPassageRevenue + 
                middlePassengeRevenue + 
                lowPassageRevenue
-
-
-# costs come from fuel, life support, maintenance, salaries, 
-# mortgage, berthing. They are all put to the per trip unit
-fuel <- 15000 # 500 per dTon by 30 dTons
-lifeSupport <- 20000 # 10 staterooms
-maintenance <- 1426 # cashPrice/1000/26
-salaries <- 4500 # assumes pilot owner
-berthing <- 100 # chump change
-mortgage <- 77250 # cashPrice/480/2
-perTripCosts <- fuel + lifeSupport + salaries + berthing + mortgage
 
 tripProfitLoss <- tripRevenue - perTripCosts
 
@@ -307,7 +330,15 @@ destSX <- floor((destinationLocationXY$destX + 1) / 32)
 destSY <- floor((destinationLocationXY$destY + 40) / 40)
 
 # set the current location to be equal to the destination i.e. jump
-  
+currentLocation <- list(sx=destSX, sy=destSY, hx=destHX, hy=destHY) 
+
 ## Post turn Admin
 # if a ship has had a -ve bank balance for 5 (?) turns on the 
 # trot, the skip jumpers catch up and repo the ship. Game over.
+# write the results of the turn to the time record
+# write any changes to the ship record
+bankBlanance <- bankBlanance + tripProfitLoss
+
+
+paste(currentLocation$hx,currentLocation$hy, sep = "") 
+}
