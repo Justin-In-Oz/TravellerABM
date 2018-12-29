@@ -175,8 +175,8 @@ shipCargoCapacity <- 82 # this is the cargo cap of a class A Freetrader
 # create the list of the results of the knpasack problem for the available cargos
 cargoRevenues <- lapply(X = names(availableCargos), 
                         FUN = function(nm) {
-                        knapsack(w = unlist(availableCargos[nm]),
-                                 p = 1000 * unlist(availableCargos[nm]),
+                        knapsack(w = availableCargos[[nm]],
+                                 p = 1000 * availableCargos[[nm]],
                                  cap = shipCargoCapacity)
                           })
 # choose a destination based upon max revenues
@@ -216,7 +216,7 @@ availableCargos[[jumpDestination]][chosenCargoes] <- 0
 # set to population of the source world
 sourcePop <- 8
 # set the population of the destination world
-destPop <- as.numeric(length(unlist(availableCargos[jumpDestination])))
+destPop <- as.numeric(length(availableCargos[[jumpDestination]]))
 
 portPassengers <- availPassengers(sourcePop,destPop)
 
@@ -290,6 +290,24 @@ berthing <- 100 # chump change
 mortgage <- 77250 # cashPrice/480/2
 perTripCosts <- fuel + lifeSupport + salaries + berthing + mortgage
 
+tripProfitLoss <- tripRevenue - perTripCosts
+
+# return the location of the jump destination
+# call up jump list
+systemsInJumpRange <- destList(portLocation = currentLocation, shipRange = jumpRange)
+
+# look up destination in the results
+destinationLocationXY <- list(destX = systemsInJumpRange$Worlds.WorldX[[destinationIndex]],
+                              destY = systemsInJumpRange$Worlds.WorldY[[destinationIndex]])
+
+# convert this to sx sy hx hy format
+destHX <- (destinationLocationXY$destX + 1) %% 32
+destHY <- (destinationLocationXY$destY + 40) %% 40
+destSX <- floor((destinationLocationXY$destX + 1) / 32)
+destSY <- floor((destinationLocationXY$destY + 40) / 40)
+
+# set the current location to be equal to the destination i.e. jump
+  
 ## Post turn Admin
 # if a ship has had a -ve bank balance for 5 (?) turns on the 
 # trot, the skip jumpers catch up and repo the ship. Game over.
