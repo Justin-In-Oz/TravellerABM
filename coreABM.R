@@ -33,7 +33,9 @@ currentLocationData <- function(portLocation) {
     fromJSON() %>%
     as.data.frame()
   # create the value for the current hex
-  currentHex = paste(portLocation$hx, portLocation$hy, sep = "")
+  currentHex = paste(as.character(formatC(portLocation$hx, width = 2, format = "d", flag = "0")), 
+                     as.character(formatC(portLocation$hy, width = 2, format = "d", flag = "0")), 
+                     sep = "")
   # remove the destinations that are not the current hex using the 
   # funky [row, column] reference notation from r
   currentLocationData <- currentLocationData[(currentLocationData$Worlds.Hex == currentHex), ]
@@ -61,7 +63,10 @@ destList <- function(portLocation, shipRange) {
     fromJSON() %>%
     as.data.frame()
   # create the value for the current hex
-  currentHex = paste(portLocation$hx, portLocation$hy, sep = "")
+  # formatC(number or vector, width = 6, format = "d", flag = "0")
+  currentHex = paste(as.character(formatC(portLocation$hx, width = 2, format = "d", flag = "0")), 
+                     as.character(formatC(portLocation$hy, width = 2, format = "d", flag = "0")), 
+                     sep = "")
   # remove the destination that is the current hex using the 
   # funky [row, column] reference notation from r
   destinationsList <- destinationsList[!(destinationsList$Worlds.Hex == currentHex), ]
@@ -161,10 +166,6 @@ availPassengers <- list("High"   = highPassengers,
 } # end available passangers function
 
 ## Initialise
-# locations are expressed as (sx, sy) and (hx, hy)
-# captains have a ship, a location and a bank balance
-
-## Random Activiation
 # Set the ship Variables
 jumpRange <- 1 # this is the range of a class A Freetrader
 shipCargoCapacity <- 82 # this is the cargo cap of a class A Freetrader
@@ -178,9 +179,11 @@ berthing <- 100 # chump change
 mortgage <- 77250 # cashPrice/480/2
 perTripCosts <- fuel + lifeSupport + salaries + berthing + mortgage
 bankBlanance <- 150000
+
+# Start somewhere, in this case Regina
 currentLocation <- list(sx=-4, sy=-1, hx=19, hy=10) # Regina
 
-for (j in 1:20 ) {
+for (j in 1:50 ) {
 
 # Jump in System
   # unload passengers 
@@ -325,7 +328,9 @@ destinationLocationXY <- list(destX = systemsInJumpRange$Worlds.WorldX[[destinat
 
 # convert this to sx sy hx hy format
 destHX <- (destinationLocationXY$destX + 1) %% 32
+destHX <- as.character(formatC(destHX, width = 2, format = "d", flag = "0"))
 destHY <- (destinationLocationXY$destY + 40) %% 40
+destHY <- as.character(formatC(destHY, width = 2, format = "d", flag = "0"))
 destSX <- floor((destinationLocationXY$destX + 1) / 32)
 destSY <- floor((destinationLocationXY$destY + 40) / 40)
 
@@ -340,5 +345,5 @@ currentLocation <- list(sx=destSX, sy=destSY, hx=destHX, hy=destHY)
 bankBlanance <- bankBlanance + tripProfitLoss
 
 
-paste(currentLocation$hx,currentLocation$hy, sep = "") 
+print(paste(currentLocation$hx,currentLocation$hy, sep = ""))
 }
