@@ -8,10 +8,11 @@
 #https://github.com/Justin-In-Oz/TravellerABM.git
 
 ## library calls and why
-library(httr) # make API calls to Traveller Map
+{library(httr) # make API calls to Traveller Map
 library(jsonlite) # parse the returns of the API calls
 library(magrittr) # pipe stuff
 library(adagio) # knapsack cargo selection and hence destination selection
+}
 
 ## Function Set Up
 currentLocationData <- function(portLocation) {
@@ -167,6 +168,8 @@ availPassengers <- list("High"   = highPassengers,
 
 ## Initialise
 # Set the ship Variables
+shipName <- "Beowulf"
+shipType <- "Type A"
 jumpRange <- 1 # this is the range of a class A Freetrader
 shipCargoCapacity <- 82 # this is the cargo cap of a class A Freetrader
 passengerStaterooms <- 6 # Freetrader
@@ -183,7 +186,24 @@ bankBlanance <- 150000
 # Start somewhere, in this case Regina
 currentLocation <- list(sx=-4, sy=-1, hx=19, hy=10) # Regina
 
-for (j in 1:50 ) {
+# set number of turns in the loop
+turns <- 50
+
+# initialise the ship's log
+shipsLog <- data.frame(turnNumber = vector(mode = "numeric", length = turns), 
+                       shipID = vector(mode = "character", length = turns),
+                       shipClass = vector(mode = "character", length = turns),
+                       shipBankBalance = vector(mode = "numeric", length = turns),
+                       startHex = vector(mode = "character", length = turns),
+                       destinationHex = vector(mode = "character", length = turns),
+                       tripProfitLoss = vector(mode = "numeric", length = turns),
+                       dTonsCarried = vector(mode = "numeric", length = turns),
+                       highPassengersCarried = vector(mode = "numeric", length = turns),
+                       middlePassengersCarried = vector(mode = "numeric", length = turns),
+                       lowBerthsFilled = vector(mode = "numeric", length = turns),
+                       stringsAsFactors = FALSE)
+
+for (i in 1:turns ) {
 
 # Jump in System
   # unload passengers 
@@ -208,6 +228,9 @@ availableCargos <- cargoList(cargoSource = currentLocation,
 # lapply the knapsack function to the cargo list and look
 # for the one which maxes the return
 
+# if a destination has no cargos, remove it from the list
+
+
 # create the list of the results of the knpasack problem for the available cargos
 cargoRevenues <- lapply(X = names(availableCargos), 
                         FUN = function(nm) {
@@ -219,8 +242,8 @@ cargoRevenues <- lapply(X = names(availableCargos),
 # pick one at random if there are several equal to the max
 
 # extract the revenues available
-revenuesAvailable <- lapply(seq_along(cargoRevenues), 
-                            function(i) cargoRevenues[[i]][["profit"]])
+revenuesAvailable <- lapply(X = seq_along(cargoRevenues), 
+                            FUN = function(i)cargoRevenues[[i]][["profit"]])
 
 # pull out the max revenue
 maxRevenue <- max(unlist(revenuesAvailable))
@@ -230,7 +253,8 @@ maxRevenue <- max(unlist(revenuesAvailable))
 destinationChoices <- which(revenuesAvailable == maxRevenue)
 
 # choose one from the list
-jumpDestination <- sample(x = names(availableCargos)[destinationChoices],size = 1)
+jumpDestination <- sample(x = names(availableCargos)[destinationChoices],
+                          size = 1)
 
 # set to zero the available cargoes that have been choosen
 #return the index of the destination 
@@ -245,15 +269,17 @@ cargosInTheHold <- availableCargos[[jumpDestination]][chosenCargoes]
 #set the available cargoes selected to zero
 availableCargos[[jumpDestination]][chosenCargoes] <- 0
 
-# after cargo selection, post destination and 
-# ** seek passengers
+# end cargo selection and loading
 
+# post destination and ** seek passengers
 # set to population of the source world
 # pull out UWP for Current Location 
 currentUWP <- currentLocationData(portLocation = currentLocation)
 
 # extract the pop of the UWP
-sourcePop <- as.numeric(substr(currentUWP$Worlds.UWP, start = 5, stop = 5))
+sourcePop <- as.numeric(substr(currentUWP$Worlds.UWP, 
+                               start = 5, 
+                               stop = 5))
 
 # set the population of the destination world
 destPop <- as.numeric(length(availableCargos[[jumpDestination]]))
@@ -296,7 +322,7 @@ if(portPassengers[["Low"]] > lowBerthCap) {
   lowPassengersOnBoard = portPassengers[["Low"]]
   portPassengers[["Low"]] <- 0
 }
-
+#end of passenger loading
 
 # ** then jump and advance your clock 1 week cannoncally, but 
 #to simplify the model the time step will be advanced by 2 
@@ -322,6 +348,9 @@ tripProfitLoss <- tripRevenue - perTripCosts
 # call up jump list
 systemsInJumpRange <- destList(portLocation = currentLocation, shipRange = jumpRange)
 
+# create current location as a hex
+
+
 # look up destination in the results
 destinationLocationXY <- list(destX = systemsInJumpRange$Worlds.WorldX[[destinationIndex]],
                               destY = systemsInJumpRange$Worlds.WorldY[[destinationIndex]])
@@ -334,6 +363,8 @@ destHY <- as.character(formatC(destHY, width = 2, format = "d", flag = "0"))
 destSX <- floor((destinationLocationXY$destX + 1) / 32)
 destSY <- floor((destinationLocationXY$destY + 40) / 40)
 
+
+
 # set the current location to be equal to the destination i.e. jump
 currentLocation <- list(sx=destSX, sy=destSY, hx=destHX, hy=destHY) 
 
@@ -344,6 +375,20 @@ currentLocation <- list(sx=destSX, sy=destSY, hx=destHX, hy=destHY)
 # write any changes to the ship record
 bankBlanance <- bankBlanance + tripProfitLoss
 
+# create a new observation in the ship's log
+shipsLog[i, ] <- c(
+  i , # turnNumber
+  shipName, # shipID
+  shipType, # shipClass
+  bankBlanance, # shipBankBalance
+  paste(destHX, destHY, sep = ""),# startHex
+  paste(destHX, destHY, sep = ""), # destinationHex
+  tripProfitLoss, # tripProfitLoss
+  sum(cargosInTheHold), # dTonsCarried
+  highPassengersOnBoard, # highPassengersCarried
+  middlePassengersOnBoard, # middlePassengersCarried
+  lowPassengersOnBoard # lowBerthsFilled
+)
 
 print(paste(currentLocation$hx,currentLocation$hy, sep = ""))
 }
