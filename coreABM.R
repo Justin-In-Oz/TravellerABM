@@ -190,7 +190,11 @@ bankBlanance <- 150000
 currentLocation <- list(sx=-4, sy=-1, hx=19, hy=10) # Regina
 
 # set number of turns in the loop
+<<<<<<< HEAD
 turns <- 100
+=======
+turns <- 50
+>>>>>>> 13001c3e99ebc5860cee78d32de3db9e29016b84
 
 # initialise the ship's log
 shipsLog <- data.frame(turnNumber = vector(mode = "numeric", length = turns), 
@@ -232,6 +236,9 @@ availableCargos <- cargoList(cargoSource = currentLocation,
 # lapply the knapsack function to the cargo list and look
 # for the one which maxes the return
 
+# if a destination has no cargos, remove it from the list
+
+
 # create the list of the results of the knpasack problem for the available cargos
 cargoRevenues <- lapply(X = names(availableCargos), 
                         FUN = function(nm) {
@@ -270,10 +277,17 @@ cargosInTheHold <- availableCargos[[jumpDestination]][chosenCargoes]
 #set the available cargoes selected to zero
 availableCargos[[jumpDestination]][chosenCargoes] <- 0
 
+<<<<<<< HEAD
 }# end cargo selection and loading
 
 # post destination and ** seek passengers
 {# set to population of the source world
+=======
+# end cargo selection and loading
+
+# post destination and ** seek passengers
+# set to population of the source world
+>>>>>>> 13001c3e99ebc5860cee78d32de3db9e29016b84
 # pull out UWP for Current Location 
 currentUWP <- currentLocationData(portLocation = currentLocation)
 
@@ -286,6 +300,7 @@ sourcePop <- as.numeric(substr(currentUWP$Worlds.UWP,
 destPop <- as.numeric(length(availableCargos[[jumpDestination]]))
 
 # Call the passengers for the destination
+<<<<<<< HEAD
     portPassengers <- availPassengers(sourcePop,destPop)
     
     # passenger selection is easier than cargo packing. Fill up 
@@ -324,6 +339,46 @@ destPop <- as.numeric(length(availableCargos[[jumpDestination]]))
       portPassengers[["Low"]] <- 0
     }
 }#end of passenger loading
+=======
+portPassengers <- availPassengers(sourcePop,destPop)
+
+# passenger selection is easier than cargo packing. Fill up 
+# on the High Passages untill they run out or you are at 
+# capacity, then switch to middle and do the same. FIll up 
+# on Low until your cryo bins are full or there are no more to take. 
+
+# load up the high passages
+if(portPassengers[["High"]] > passengerStaterooms) {
+  highPassengersOnBoard = passengerStaterooms
+  portPassengers[["High"]] <- portPassengers[["High"]] - passengerStaterooms
+} else if (portPassengers[["High"]] <= passengerStaterooms) {
+  highPassengersOnBoard = portPassengers[["High"]]
+  portPassengers[["High"]] <- 0
+}
+
+# load up Middle Passages with remaining capacity
+
+# determine the capacity less the number of High Passengers
+remainingStaterooms <- passengerStaterooms - highPassengersOnBoard
+
+# load up the high passages
+if(portPassengers[["Middle"]] > remainingStaterooms) {
+  middlePassengersOnBoard = remainingStaterooms
+  portPassengers[["Middle"]] <- portPassengers[["Middle"]] - remainingStaterooms
+} else if (portPassengers[["Middle"]] <= remainingStaterooms) {
+  middlePassengersOnBoard = portPassengers[["Middle"]]
+  portPassengers[["Middle"]] <- 0
+}
+# allocate the remaining spaces to Low Passengers
+if(portPassengers[["Low"]] > lowBerthCap) {
+  lowPassengersOnBoard = lowBerthCap
+  portPassengers[["Low"]] <- portPassengers[["Low"]] - lowBerthCap
+} else if (portPassengers["Low"] <= lowBerthCap) {
+  lowPassengersOnBoard = portPassengers[["Low"]]
+  portPassengers[["Low"]] <- 0
+}
+#end of passenger loading
+>>>>>>> 13001c3e99ebc5860cee78d32de3db9e29016b84
 
 # ** then jump and advance your clock 1 week cannoncally, but 
 #to simplify the model the time step will be advanced by 2 
@@ -351,6 +406,10 @@ systemsInJumpRange <- destList(portLocation = currentLocation, shipRange = jumpR
 
 # create current location as a hex
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 13001c3e99ebc5860cee78d32de3db9e29016b84
 # look up destination in the results
 destinationLocationXY <- list(destX = systemsInJumpRange$Worlds.WorldX[[destinationIndex]],
                               destY = systemsInJumpRange$Worlds.WorldY[[destinationIndex]])
@@ -363,9 +422,13 @@ destHY <- as.character(formatC(destHY, width = 2, format = "d", flag = "0"))
 destSX <- floor((destinationLocationXY$destX + 1) / 32)
 destSY <- floor((destinationLocationXY$destY + 40) / 40)
 
+<<<<<<< HEAD
 # pull out the current hex as start hex for the ships log before overwriting
 startHX <- as.character(formatC(currentLocation$hx, width = 2, format = "d", flag = "0"))
 startHY <- as.character(formatC(currentLocation$hy, width = 2, format = "d", flag = "0"))
+=======
+
+>>>>>>> 13001c3e99ebc5860cee78d32de3db9e29016b84
 
 # set the current location to be equal to the destination i.e. jump
 currentLocation <- list(sx=destSX, sy=destSY, hx=destHX, hy=destHY) 
@@ -378,6 +441,7 @@ currentLocation <- list(sx=destSX, sy=destSY, hx=destHX, hy=destHY)
 bankBlanance <- bankBlanance + tripProfitLoss
 
 # create a new observation in the ship's log
+<<<<<<< HEAD
 shipsLog[i, 1] <- i # turnNumber
 shipsLog[i, 2] <- shipName # shipID
 shipsLog[i, 3] <- shipType # shipClass
@@ -391,5 +455,21 @@ shipsLog[i, 10] <- middlePassengersOnBoard # middlePassengersCarried
 shipsLog[i, 11] <- lowPassengersOnBoard # lowBerthsFilled
 
 # This is just to provide some output as the loop progresses.
+=======
+shipsLog[i, ] <- c(
+  i , # turnNumber
+  shipName, # shipID
+  shipType, # shipClass
+  bankBlanance, # shipBankBalance
+  paste(destHX, destHY, sep = ""),# startHex
+  paste(destHX, destHY, sep = ""), # destinationHex
+  tripProfitLoss, # tripProfitLoss
+  sum(cargosInTheHold), # dTonsCarried
+  highPassengersOnBoard, # highPassengersCarried
+  middlePassengersOnBoard, # middlePassengersCarried
+  lowPassengersOnBoard # lowBerthsFilled
+)
+
+>>>>>>> 13001c3e99ebc5860cee78d32de3db9e29016b84
 print(paste(currentLocation$hx,currentLocation$hy, sep = ""))
 }
