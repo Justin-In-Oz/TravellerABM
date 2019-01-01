@@ -107,6 +107,7 @@ cargoList <- function (cargoSource, shipRange) {
   # name the cargo destinations in the list
   names(pointToPointCargos) <- portsOfCall$Worlds.Name
   
+  # browser()
   # remove any destination when the number of cargoes is zero
   pointToPointCargos <- pointToPointCargos[lengths(pointToPointCargos) > 0]
   
@@ -224,7 +225,7 @@ for (i in 1:turns ) {
     # call the destList function to find out what is available
     availableCargos <- cargoList(cargoSource = currentLocation, 
                                  shipRange = jumpRange)
-    browser()
+    
     # cargo selection is a load packing problem.
     # this can be done via linear program, various heuristics
     # or random brute force. 
@@ -391,5 +392,5 @@ for (i in 1:turns ) {
   shipsLog[i, 11] <- lowPassengersOnBoard # lowBerthsFilled
   
   # This is just to provide some output as the loop progresses.
-  print(paste(currentLocation$hx,currentLocation$hy, sep = ""))
+  print(paste(currentLocation$hx,currentLocation$hy, " ", jumpDestination, sep = ""))
 }
