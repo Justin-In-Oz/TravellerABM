@@ -8,7 +8,7 @@
 #https://github.com/Justin-In-Oz/TravellerABM.git
 
 ## library calls and why
-{library(httr) # make API calls to Traveller Map
+{ library(httr) # make API calls to Traveller Map
   library(jsonlite) # parse the returns of the API calls
   library(magrittr) # pipe stuff
   library(adagio) # knapsack cargo selection and hence destination selection
@@ -188,17 +188,20 @@ perTripCosts <- fuel + lifeSupport + salaries + berthing + mortgage
 bankBlanance <- 150000
 
 # Start somewhere, in this case Regina
-currentLocation <- list(sx=-4, sy=-1, hx=20, hy=11) # 
+currentLocation <- list(sx=-4, sy=-1, hx=11, hy=06) # 
 
 # set number of turns in the loop
-turns <- 100
+ turns <- (10 * 26) # ten years
+# turns <- 10 # quick run
 
 # initialise the ship's log
 shipsLog <- data.frame(turnNumber = vector(mode = "numeric", length = turns), 
                        shipID = vector(mode = "character", length = turns),
                        shipClass = vector(mode = "character", length = turns),
                        shipBankBalance = vector(mode = "numeric", length = turns),
+                       startName = vector(mode = "character", length = turns),
                        startHex = vector(mode = "character", length = turns),
+                       destinationName = vector(mode = "character", length = turns),
                        destinationHex = vector(mode = "character", length = turns),
                        tripProfitLoss = vector(mode = "numeric", length = turns),
                        dTonsCarried = vector(mode = "numeric", length = turns),
@@ -260,7 +263,7 @@ for (i in 1:turns ) {
     
     # set to zero the available cargoes that have been choosen
     #return the index of the destination 
-    destinationIndex <- which(names(availableCargos)== jumpDestination)
+    destinationIndex <- which(names(availableCargos) == jumpDestination)
     
     #return the indices of the knapsack selection
     chosenCargoes <- cargoRevenues[[destinationIndex]][["indices"]]
@@ -277,6 +280,9 @@ for (i in 1:turns ) {
   {# set to population of the source world
     # pull out UWP for Current Location 
     currentUWP <- currentLocationData(portLocation = currentLocation)
+    
+    # extract the name of the current system for the ships log
+    startSystemName <- currentUWP$Worlds.Name
     
     # extract the pop of the UWP
     sourcePop <- as.numeric(substr(currentUWP$Worlds.UWP, 
@@ -295,12 +301,12 @@ for (i in 1:turns ) {
     # on Low until your cryo bins are full or there are no more to take. 
     
     # load up the high passages
-    if(portPassengers[["High"]] > passengerStaterooms) {
-      highPassengersOnBoard = passengerStaterooms
-      portPassengers[["High"]] <- portPassengers[["High"]] - passengerStaterooms
+    if (portPassengers[["High"]] > passengerStaterooms) {
+        highPassengersOnBoard = passengerStaterooms
+        portPassengers[["High"]] <- portPassengers[["High"]] - passengerStaterooms
     } else if (portPassengers[["High"]] <= passengerStaterooms) {
-      highPassengersOnBoard = portPassengers[["High"]]
-      portPassengers[["High"]] <- 0
+        highPassengersOnBoard = portPassengers[["High"]]
+        portPassengers[["High"]] <- 0
     }
     
     # load up Middle Passages with remaining capacity
@@ -309,20 +315,20 @@ for (i in 1:turns ) {
     remainingStaterooms <- passengerStaterooms - highPassengersOnBoard
     
     # load up the high passages
-    if(portPassengers[["Middle"]] > remainingStaterooms) {
-      middlePassengersOnBoard = remainingStaterooms
-      portPassengers[["Middle"]] <- portPassengers[["Middle"]] - remainingStaterooms
+    if (portPassengers[["Middle"]] > remainingStaterooms) {
+        middlePassengersOnBoard = remainingStaterooms
+        portPassengers[["Middle"]] <- portPassengers[["Middle"]] - remainingStaterooms
     } else if (portPassengers[["Middle"]] <= remainingStaterooms) {
-      middlePassengersOnBoard = portPassengers[["Middle"]]
-      portPassengers[["Middle"]] <- 0
+        middlePassengersOnBoard = portPassengers[["Middle"]]
+        portPassengers[["Middle"]] <- 0
     }
     # allocate the remaining spaces to Low Passengers
-    if(portPassengers[["Low"]] > lowBerthCap) {
-      lowPassengersOnBoard = lowBerthCap
-      portPassengers[["Low"]] <- portPassengers[["Low"]] - lowBerthCap
+    if (portPassengers[["Low"]] > lowBerthCap) {
+        lowPassengersOnBoard = lowBerthCap
+        portPassengers[["Low"]] <- portPassengers[["Low"]] - lowBerthCap
     } else if (portPassengers["Low"] <= lowBerthCap) {
-      lowPassengersOnBoard = portPassengers[["Low"]]
-      portPassengers[["Low"]] <- 0
+        lowPassengersOnBoard = portPassengers[["Low"]]
+        portPassengers[["Low"]] <- 0
     }
   }#end of passenger loading
   
@@ -379,17 +385,19 @@ for (i in 1:turns ) {
   bankBlanance <- bankBlanance + tripProfitLoss
   
   # create a new observation in the ship's log
-  shipsLog[i, 1] <- i # turnNumber
-  shipsLog[i, 2] <- shipName # shipID
-  shipsLog[i, 3] <- shipType # shipClass
-  shipsLog[i, 4] <- bankBlanance # shipBankBalance
-  shipsLog[i, 5] <- paste(startHX, startHY, sep = "") # startHex
-  shipsLog[i, 6] <- paste(destHX, destHY, sep = "") # destinationHex
-  shipsLog[i, 7] <- tripProfitLoss # tripProfitLoss
-  shipsLog[i, 8] <- sum(cargosInTheHold) # dTonsCarried
-  shipsLog[i, 9] <- highPassengersOnBoard # highPassengersCarried
-  shipsLog[i, 10] <- middlePassengersOnBoard # middlePassengersCarried
-  shipsLog[i, 11] <- lowPassengersOnBoard # lowBerthsFilled
+  shipsLog[i, 1]  <- i # turnNumber
+  shipsLog[i, 2]  <- shipName # shipID
+  shipsLog[i, 3]  <- shipType # shipClass
+  shipsLog[i, 4]  <- bankBlanance # shipBankBalance
+  shipsLog[i, 5]  <- startSystemName # name of the start system  
+  shipsLog[i, 6]  <- paste(startHX, startHY, sep = "") # startHex
+  shipsLog[i, 7]  <- jumpDestination # name of the destination system
+  shipsLog[i, 8]  <- paste(destHX, destHY, sep = "") # destinationHex
+  shipsLog[i, 9]  <- tripProfitLoss # tripProfitLoss
+  shipsLog[i, 10] <- sum(cargosInTheHold) # dTonsCarried
+  shipsLog[i, 11] <- highPassengersOnBoard # highPassengersCarried
+  shipsLog[i, 12] <- middlePassengersOnBoard # middlePassengersCarried
+  shipsLog[i, 13] <- lowPassengersOnBoard # lowBerthsFilled
   
   # This is just to provide some output as the loop progresses.
   print(paste(currentLocation$hx,currentLocation$hy, " ", jumpDestination, sep = ""))
