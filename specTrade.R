@@ -2,67 +2,94 @@
 # this is drawn from pages 42 to 44 of GDW's 
 # Traveller LBB2 pub 1977
 
-# inputs required
-purchWorldPop <- 7
 
+# create the Trade and Speculation Table
 
+# Create the trade goods names
+{
+  # initialise the vector
+  tradeGood <- vector(mode = "character", length = 36)
 
-# create the Trade and Spcutlation Table
-tradeGood <- vector(mode = "character", length = 36)
-basePrice <- vector(mode = "numeric", length = 36)
+  # fill the vector
+  tradeGood <- c("Textiles",
+                 "Polymers",
+                 "Liquor",
+                 "Wood",
+                 "Crystals",
+                 "Radioactives",
+                 "Steel",
+                 "Copper",
+                 "Aluminium",
+                 "Tin",
+                 "Silver",
+                 "Special Alloys",
+                 "Petrochemicals",
+                 "Grain",
+                 "Meat",
+                 "Spices",
+                 "Fruit",
+                 "Pharmaceuticals",
+                 "Gems",
+                 "Firearms",
+                 "Ammunition",
+                 "Blades",
+                 "Tools",
+                 "Body Armour",
+                 "Aircraft",
+                 "Air/Raft",
+                 "Computers",
+                 "ATV",
+                 "AFV",
+                 "Farm Machinery",
+                 "Electronics Parts",
+                 "Mechanical Parts",
+                 "Cybernetic Parts",
+                 "Computer Parts",
+                 "Machine Tools",
+                 "Vacc Suits")
+} # end creation of trade goods names
 
-tradeGood <- c("Textiles",
-               "Polymers",
-               "Liquor",
-               "Wood",
-               "Crystals",
-               "Radioactives",
-               "Steel",
-               "Copper",
-               "Aluminium",
-               "Tin",
-               "Silver",
-               "Special Alloys",
-               "Petrochemicals",
-               "Grain",
-               "Meat",
-               "Spices",
-               "Fruit",
-               "Pharmaceuticals",
-               "Gems",
-               "Firearms",
-               "Ammunition",
-               "Blades",
-               "Tools",
-               "Body Armour",
-               "Aircraft",
-               "Air/Raft",
-               "Computers",
-               "ATV",
-               "AFV",
-               "Farm Machinery",
-               "Electronics Parts",
-               "Mechanical Parts",
-               "Cybernetic Parts",
-               "Computer Parts",
-               "Machine Tools",
-               "Vacc Suits")
-
-# initialise vectors for the purchase dice modifiers
-agrWorldPurchDM <- vector(mode = "numeric", length = 36)
-nonAgrWorldPurchDM <- vector(mode = "numeric", length = 36)
-indWorldPurchDM <- vector(mode = "numeric", length = 36)
-nonIndWorldPurchDM <- vector(mode = "numeric", length = 36)
-richWorldPurchDM <- vector(mode = "numeric", length = 36)
-poorWorldPurchDM <- vector(mode = "numeric", length = 36)
-
-# initialise vectors for the purchase dice modifiers
-agrWorldResaleDM <- vector(mode = "numeric", length = 36)
-nonAgrWorldResaleDM <- vector(mode = "numeric", length = 36)
-indWorldResaleDM <- vector(mode = "numeric", length = 36)
-nonIndWorldResaleDM <- vector(mode = "numeric", length = 36)
-richWorldResaleDM <- vector(mode = "numeric", length = 36)
-poorWorldResaleDM <- vector(mode = "numeric", length = 36)
+# Create base price vector
+{basePrice <- vector(mode = "numeric", length = 36)
+basePrice <- c(
+     3000, # Textiles
+     7000, # Polymers
+    10000, # Liquor
+     1000, # Wood
+    20000, # Crystals
+  1000000, # Radioactives
+      500, # Steel
+     2000, # Copper
+     1000, # Aluminium
+     9000, # Tin
+    70000, # Silver
+   200000, # Special Alloys
+    10000, # Petrochemicals
+      300, # Grain
+     1500, # Meat
+     6000, # Spices
+     1000, # Fruit
+   100000, # Pharmaceuticals
+  1000000, # Gems
+    30000, # Firearms
+    30000, # Ammuntion
+    10000, # Blades
+    10000, # Tools
+    50000, # Body Armour
+  1000000, # Aircraft
+  6000000, # Air/Raft
+ 10000000, # Computers
+  3000000, # ATV
+  7000000, # AFV
+   150000, # Farm Machinery
+   100000, # Electronic Parts
+    75000, # Mechanical Parts
+   250000, # Cybernetic Parts
+   150000, # Computer Parts
+   750000, # Machine Tools
+   400000  # Vacc Suits
+) 
+}# End of Price vector creation
 
 # initialise the vector for the quantity determination
 qtyDice <- vector(mode = "numeric", length = 36)
@@ -70,7 +97,15 @@ qtyMult <- vector(mode = "numeric", length = 36)
 
 # Purchase DMs 
 {
-# set the agrWorldPurch Mods
+  # initialise vectors for the purchase dice modifiers
+  agrWorldPurchDM <- vector(mode = "numeric", length = 36)
+  nonAgrWorldPurchDM <- vector(mode = "numeric", length = 36)
+  indWorldPurchDM <- vector(mode = "numeric", length = 36)
+  nonIndWorldPurchDM <- vector(mode = "numeric", length = 36)
+  richWorldPurchDM <- vector(mode = "numeric", length = 36)
+  poorWorldPurchDM <- vector(mode = "numeric", length = 36)
+  
+  # set the agrWorldPurch Mods
 agrWorldPurchDM[1]  <- -7 # 11 Textiles
 agrWorldPurchDM[3]  <- -4 # 13 Liquor
 agrWorldPurchDM[4]  <- -6 # 14 Wood
@@ -175,11 +210,26 @@ poorWorldPurchDM[23] <-  3 # 45 Tools
 poorWorldPurchDM[24] <-  3 # 46 Body Armour
 poorWorldPurchDM[29] <-  4 # 55 AFV
 
+purchaseDMs <- data.frame(agrWorldPurchDM, 
+                     nonAgrWorldPurchDM, 
+                     indWorldPurchDM, 
+                     nonIndWorldPurchDM, 
+                     richWorldPurchDM, 
+                     poorWorldPurchDM, 
+                     row.names = tradeGood)
 } # End of Purchase DMs
 
 # Resale DMs
 {
-# set the Agricultural world Resale mods
+  # initialise vectors for the purchase dice modifiers
+  agrWorldResaleDM <- vector(mode = "numeric", length = 36)
+  nonAgrWorldResaleDM <- vector(mode = "numeric", length = 36)
+  indWorldResaleDM <- vector(mode = "numeric", length = 36)
+  nonIndWorldResaleDM <- vector(mode = "numeric", length = 36)
+  richWorldResaleDM <- vector(mode = "numeric", length = 36)
+  poorWorldResaleDM <- vector(mode = "numeric", length = 36)
+  
+  # set the Agricultural world Resale mods
 agrWorldResaleDM[1]  <- -6 # 11 Textiles
 agrWorldResaleDM[3]  <- -3 # 13 Liquor
 agrWorldResaleDM[4]  <- -6 # 14 Wood
@@ -295,3 +345,51 @@ testDF <- data.frame(agrWorldPurchDM,
                      richWorldResaleDM, 
                      poorWorldResaleDM, 
                      row.names = tradeGood)
+
+# inputs required
+purchWorldPop <- 7
+
+# Set the different sample set for the world pop levels
+highPopTrade <- c(7:36, 31:36)
+midPopTrade  <- c(1:36)
+lowPopTrade  <- c(1:6, 1:30)
+
+# determine what pop level the world is wrt to trade goods available
+if(purchWorldPop > 8) {
+  tradeIndexPool <- highPopTrade
+} else if (purchWorldPop < 6) {
+  tradeIndexPool <- lowPopTrade
+} else {
+  tradeIndexPool <- midPopTrade
+}
+
+# Determine which trade good is available
+tradeGoodIndex <- sample(tradeIndexPool, size = 1)
+
+# return the name of the good type
+goodsAvailable <- tradeGood[tradeGoodIndex]
+
+# determine the value of the unit of goods
+# set the vector of the value multiplier
+valueMultiplier <- vector(mode = "numeric", length = 14)
+valueMultiplier <- c(.4, .5, .7, .8, .9, 1, 1.1, 1.2, 1.3, 1.5, 1.7, 2, 3, 4)
+
+# roll the dice
+roll2d6 <- sample(1:6, 1) + sample(1:6, 1)
+
+# determine the purchase DMs
+tradeCodes <- currentUWP$Worlds.Remarks
+
+purchWorldLogical <- vector(mode = "logical", length = 6)
+
+purchWorldLogical <- c(
+  grepl("Ag", tradeCodes, fixed = TRUE),
+  grepl("Na", tradeCodes, fixed = TRUE),
+  grepl("In", tradeCodes, fixed = TRUE),
+  grepl("Ni", tradeCodes, fixed = TRUE),
+  grepl("Ri", tradeCodes, fixed = TRUE),
+  grepl("Po", tradeCodes, fixed = TRUE)
+)
+
+actualValueDMs <- purchaseDMs[tradeGoodIndex,]*purchWorldLogical
+
