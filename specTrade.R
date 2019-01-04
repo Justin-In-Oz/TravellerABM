@@ -11,6 +11,43 @@ purchWorldPop <- 7
 tradeGood <- vector(mode = "character", length = 36)
 basePrice <- vector(mode = "numeric", length = 36)
 
+tradeGood <- c("Textiles",
+               "Polymers",
+               "Liquor",
+               "Wood",
+               "Crystals",
+               "Radioactives",
+               "Steel",
+               "Copper",
+               "Aluminium",
+               "Tin",
+               "Silver",
+               "Special Alloys",
+               "Petrochemicals",
+               "Grain",
+               "Meat",
+               "Spices",
+               "Fruit",
+               "Pharmaceuticals",
+               "Gems",
+               "Firearms",
+               "Ammunition",
+               "Blades",
+               "Tools",
+               "Body Armour",
+               "Aircraft",
+               "Air/Raft",
+               "Computers",
+               "ATV",
+               "AFV",
+               "Farm Machinery",
+               "Electronics Parts",
+               "Mechanical Parts",
+               "Cybernetic Parts",
+               "Computer Parts",
+               "Machine Tools",
+               "Vacc Suits")
+
 # initialise vectors for the purchase dice modifiers
 agrWorldPurchDM <- vector(mode = "numeric", length = 36)
 nonAgrWorldPurchDM <- vector(mode = "numeric", length = 36)
@@ -136,3 +173,26 @@ poorWorldPurchDM[23] <-  3 # 45 Tools
 poorWorldPurchDM[24] <-  3 # 46 Body Armour
 poorWorldPurchDM[29] <-  4 # 55 AFV
 
+# set the Agricultural world Resale mods
+agrWorldResaleDM[1]  <- -6 # 11 Textiles
+agrWorldResaleDM[3]  <- -3 # 13 Liquor
+agrWorldResaleDM[4]  <- -6 # 14 Wood
+agrWorldResaleDM[14] <- -2 # 32 Grain
+agrWorldResaleDM[15] <- -2 # 33 Meat
+agrWorldResaleDM[16] <- -2 # 34 Spices
+agrWorldResaleDM[17] <- -2 # 35 Fruit
+agrWorldResaleDM[30] <-  5 # 56 Farm Machinery
+
+# set the Non-Agricultural world Resale mods
+nonAgrWorldResaleDM[1]  <-  1 # 11 Textiles
+nonAgrWorldResaleDM[5]  <- -3 # 15 Crystals
+nonAgrWorldResaleDM[13] <- -4 # 31 Petrochemicals
+nonAgrWorldResaleDM[18] <-  1 # 36 Pharmaceuticals
+nonAgrWorldResaleDM[29] <- -2 # 55 AFV
+nonAgrWorldResaleDM[30] <- -8 # 56 Farm Machinery
+nonAgrWorldResaleDM[33] <-  2 # 63 Cybernetic Parts
+nonAgrWorldResaleDM[34] <-  2 # 64 Computer Parts
+nonAgrWorldResaleDM[35] <-  2 # 65 Machine Tools
+
+# set the Industrial world Resale mods
+indWorldResaleDM[2]  <- -2 # Polymers
